@@ -4,6 +4,7 @@ import cmath
 import math
 from itertools import permutations
 import time
+import ctypes
 
 def pairwiseDist(positions):
     n = np.shape(positions)[1]
@@ -202,13 +203,10 @@ def calibrationTriangleSize(distance, num_radar):
         if not(triangleFound):
             print("Data can't be calibrated")
             break
-    st = time.time()
-    np.seterr(divide='ignore', invalid='ignore')
-    for grad_iter in range(500000):
-        dist_cal = pairwiseDist(posCalibrated)
-        const = (dist_cal - distance)/dist_cal
-        loss = np.reshape([const[i, j]*(posCalibrated[k, i]-posCalibrated[k, j]) for k in range(3) for i in range(num_radar) for j in range(num_radar)], (3,num_radar, num_radar))
-        loss = np.nansum(loss, axis=1)*2
-        posCalibrated = posCalibrated + loss * 0.0005
-    print("--- %s seconds ---" % (time.time() - st))
-    return posCalibrated
+    
+    grad_lib = ctypes.CDLL("./gradient.so")
+
+    grad_lib.gradient.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+    posgrad = np.zeros((3, num_radar), dtype=np.float64)
+    grad_lib.gradient(num_radar, posCalibrated.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), posgrad.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+    return posgrad
