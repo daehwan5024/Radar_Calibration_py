@@ -4,10 +4,6 @@
 #include <sys/time.h>
 #include <string.h>
 
-double* gradient(double* posCalibrated, double* distance, int num_radar) {
-
-}
-
 int main() {
     int num_radar = 6;
     double posCalibrated[3][6] =  {

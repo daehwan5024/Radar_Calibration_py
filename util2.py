@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import cmath
 import math
 from itertools import permutations
-import time
+
 
 def pairwiseDist(positions):
     n = np.shape(positions)[1]
@@ -202,13 +202,19 @@ def calibrationTriangleSize(distance, num_radar):
         if not(triangleFound):
             print("Data can't be calibrated")
             break
-    st = time.time()
-    np.seterr(divide='ignore', invalid='ignore')
+
     for grad_iter in range(500000):
-        dist_cal = pairwiseDist(posCalibrated)
-        const = (dist_cal - distance)/dist_cal
-        loss = np.reshape([const[i, j]*(posCalibrated[k, i]-posCalibrated[k, j]) for k in range(3) for i in range(num_radar) for j in range(num_radar)], (3,num_radar, num_radar))
-        loss = np.nansum(loss, axis=1)*2
-        posCalibrated = posCalibrated + loss * 0.0005
-    print("--- %s seconds ---" % (time.time() - st))
+        loss = np.zeros((3, num_radar))
+        for i in range(num_radar):
+            loss_t = np.zeros(3)
+            for j in range(num_radar):
+                if i == j:
+                    continue
+                if np.isnan(distance[i, j]):
+                    continue
+                dist_ij = np.linalg.norm(posCalibrated[:,i] - posCalibrated[:,j])
+                const = (dist_ij - distance[i, j])/dist_ij
+                loss_t = loss_t + 2*const*(posCalibrated[:,i] - posCalibrated[:,j])
+            loss[:,i] = loss_t
+        posCalibrated = posCalibrated - loss * 0.0005
     return posCalibrated
