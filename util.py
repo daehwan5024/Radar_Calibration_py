@@ -21,7 +21,7 @@ def getBetter(new1, new2, newIndex, posCalibrated, distance, known):
         num_row = np.shape(input1)[0]
         for i in range(num_row):
             for j in range(num_row):
-                if known[i] and known[j]:
+                if known[i] and known[j] and not(np.isnan(input2[i, j])):
                     error += (input1[i, j] - input2[i, j]) ** 2
         
         return error
@@ -75,7 +75,7 @@ def getTriangleList(distance):
             for k in range(j):
                 a = distance[i, j]; b = distance[j, k]; c = distance[k, i]; s = (a+b+c)/2
                 area = cmath.sqrt(s*(s-a)*(s-b)*(s-c))
-                if area.imag != 0:
+                if area.imag != 0 or np.isnan(area):
                     continue
                 triangleList = np.append(triangleList, [area.real, k , j, i]).reshape(-1,4)
     return triangleList[triangleList[:,0].argsort()][::-1]
@@ -91,7 +91,8 @@ def getTrilateration(*args):
         return np.array([1j,1j,1j])
     assert np.shape(r)[0] == 3
     assert np.shape(positions) == (3,3)
-
+    if np.any(np.isnan(r)):
+        return 1j
     p21 = positions[:,1] - positions[:,0]
     p31 = positions[:,2] - positions[:,0]
 
@@ -144,8 +145,11 @@ def calibrationTriangleSize(distance, num_radar):
             print("Data can't be calibrated")
             break
     # C library for gradient descent
+    nan_arr = np.isnan(distance)
     grad_lib = ctypes.CDLL("./gradient.so")
-    grad_lib.gradient.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+    grad_lib.gradient.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_bool), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
     result = np.zeros((3, num_radar), dtype=np.float64)
-    grad_lib.gradient(num_radar, posCalibrated.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), result.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+
+    grad_lib.gradient(num_radar, nan_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_bool)), posCalibrated.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                       distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), result.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
     return result

@@ -2,11 +2,13 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <stdbool.h>
 
-void *gradient(int num_radar, double *posCalibrated_1D, double *distance_1D, double *res) {
+void gradient(int num_radar, bool *isnan_1D, double *posCalibrated_1D, double *distance_1D, double *res) {
     int grad = 0;
     double loss[3][num_radar];
     double posCalibrated[3][num_radar];
+    bool isnan[num_radar][num_radar];
     double distance[num_radar][num_radar];
     for(int i=0;i<3;i++) {
         for(int j=0;j<num_radar;j++) {
@@ -16,6 +18,7 @@ void *gradient(int num_radar, double *posCalibrated_1D, double *distance_1D, dou
     for(int i=0;i<num_radar;i++) {
         for(int j=0;j<num_radar;j++) {
             distance[i][j] = distance_1D[i*num_radar + j];
+            isnan[i][j] = isnan_1D[i*num_radar + j];
         }
     }
     while(grad++<500000){
@@ -24,6 +27,7 @@ void *gradient(int num_radar, double *posCalibrated_1D, double *distance_1D, dou
             double loss_t[3] = {0};
             for(int j=0;j<num_radar;j++) {
                 if(i==j) continue;
+                if(isnan[i][j]) continue;
                 double diff[3] = {posCalibrated[0][i] - posCalibrated[0][j], posCalibrated[1][i] - posCalibrated[1][j],
                                 posCalibrated[2][i] - posCalibrated[2][j]};
                 double dist_ij = sqrt(diff[0]*diff[0] + diff[1]*diff[1] + diff[2]*diff[2]);
