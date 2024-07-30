@@ -1,9 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import cmath
 import math
-from itertools import permutations
-import time
 import ctypes
 
 def pairwiseDist(positions):
@@ -50,14 +47,14 @@ def getTransform(result):
     translation[0:3,3] = -result[:,0]
 
     relative_vec = result - result[:,0]
-    cosTheta1 = relative_vec[0,1]/cmath.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
-    sinTheta1 = -relative_vec[1,1]/cmath.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
-    cosTheta2 = cmath.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2) / cmath.sqrt(np.linalg.norm(relative_vec[:,1]))
-    sinTheta2 = relative_vec[2,1]/cmath.sqrt(np.linalg.norm(relative_vec[:,1]))
+    cosTheta1 = relative_vec[0,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
+    sinTheta1 = -relative_vec[1,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
+    cosTheta2 = math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2) / math.sqrt(np.linalg.norm(relative_vec[:,1]))
+    sinTheta2 = relative_vec[2,1]/math.sqrt(np.linalg.norm(relative_vec[:,1]))
     rotation_t = np.array([[cosTheta2, 0, sinTheta2], [0, 1, 0], [-1*sinTheta2, 0, cosTheta2]]) * np.array([[cosTheta1, -1*sinTheta1, 0], [sinTheta1, cosTheta1, 0], [0, 0, 1]])
     pos_t = rotation_t*relative_vec[:,2]
-    cosTheta3 = pos_t[1]/cmath.sqrt(pos_t[1]**2 + pos_t[2]**2)
-    sinTheta3 = pos_t[2]/cmath.sqrt(pos_t[1]**2 + pos_t[2]**2)
+    cosTheta3 = pos_t[1]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
+    sinTheta3 = pos_t[2]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
 
     rotation = np.array([[1, 0, 0], [0, cosTheta3, -1*sinTheta3], [0, sinTheta3, cosTheta3]]) *rotation_t
     transformMatrix[1:3,1:3] = rotation
@@ -81,7 +78,6 @@ def getTriangleList(distance):
                 if area.imag != 0:
                     continue
                 triangleList = np.append(triangleList, [area.real, k , j, i]).reshape(-1,4)
-    print()
     return triangleList[triangleList[:,0].argsort()][::-1]
 
 def getTrilateration(*args):
@@ -103,7 +99,10 @@ def getTrilateration(*args):
     c2 = np.sum(np.square(c))
     u1 = np.cross( ((np.sum(np.square(p21)) + r[0]**2 - r[1]**2)*p31 - (np.sum(np.square(p31)) + r[0]**2 - r[2]**2)*p21)/2, c )/c2
     v = cmath.sqrt(r[0]**2 - np.sum(np.square(u1)))*c/cmath.sqrt(c2)
-    return positions[:,0] + u1 + v
+    if np.all(v.imag == 0):
+        return positions[:,0] + u1 + v.real
+    else:
+        return 1j
 
 
 def calibrationTriangleSize(distance, num_radar):
