@@ -2,11 +2,6 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-double **posCalibrated;
-
-void copy_mem(double *src, double *dest, size_t size) {
-    memcpy(dest, src, size);
-}
 
 void *gradient(int num_radar, double *posCalibrated_1D, double *distance_1D, double *res) {
     int grad = 0;
@@ -50,5 +45,5 @@ void *gradient(int num_radar, double *posCalibrated_1D, double *distance_1D, dou
             posCalibrated_1D[i*num_radar+j] = posCalibrated[i][j];
         }
     }
-    copy_mem(posCalibrated_1D, res, sizeof(double)*3*num_radar);
+    memcpy(res, posCalibrated_1D, sizeof(double)*3*num_radar);
 }

@@ -40,58 +40,6 @@ def getBetter(new1, new2, newIndex, posCalibrated, distance, known):
         return new2
 
 
-def getInsertOrder(pdopList, num_radar:int):
-    radars = np.arange(0, num_radar)
-    result = np.array([])
-
-    for i in range(num_radar):
-        for j in range(i):
-            for k in range(j):
-                temp = np.delete(radars, i)
-                temp = np.delete(temp, j)
-                temp = np.delete(temp, k)
-                for t in permutations(temp):
-                    if np.shape(result) == (0,):
-                        result = np.array([np.append([k, j, i], t)])
-                    else:
-                        result = np.append(result, np.array([np.append([k, j, i], t)]), axis=0)
-    return result
-
-
-def getPDOPList(distance):
-    num_radar = np.shape(distance)[0]
-    dist_nan = np.isnan(distance)
-    def posRelative(target, radar1, radar2, radar3):
-        if dist_nan[radar1, radar2] or dist_nan[radar1, radar3] or dist_nan(radar1, target) or dist_nan(radar2, radar3) or dist_nan(radar2, target) or dist_nan(radar3, target):
-            return np.array([1j, 1j, 1j]), np.array([1j, 1j, 1j]), np.array([1j, 1j, 1j])
-        x2, x3, y3 = getTriangle(distance(radar1, radar2), distance(radar2, radar3), distance(radar3, radar1))
-        targetPos = getTrilateration([0,0,0], [x2,0,0], [x3,y3,0], distance(target, radar1), distance(target, radar2), distance(target, radar3))
-        if not(np.isreal(targetPos)):
-            return [1j,1j,1j],[1j,1j,1j],[1j,1j,1j]
-        return np.array([0,0,0]) - targetPos, np.array([x2,0,0]) - targetPos, np.array(x3,y3,0) - targetPos
-    pdopList = np.array([])
-    for i in range(num_radar):
-        for j in range(i):
-            for k in range(j):
-                for radar in range(num_radar):
-                    if i==radar or j== radar or k==radar:
-                        continue
-                    # calculates PDOP assuming that target is at the origin
-                    radar1, radar2, radar3 = posRelative(radar, i, j, k)
-                    if not(np.isreal(radar1).all()):
-                        continue
-
-                    A = np.array([radar1, radar2, radar3]).transpose
-                    B = np.square(A)
-                    C = np.zeros((3,3))
-                    C[1,:] = A[1,:]/cmath.sqrt(np.sum(B[1,:]))
-                    C[2,:] = A[2,:]/cmath.sqrt(np.sum(B[2,:]))
-                    C[3,:] = A[3,:]/cmath.sqrt(np.sum(B[3,:]))
-                    D = np.linalg.inv(C.transpose * C)
-                    pdopList = np.append(pdopList, [cmath.sqrt(np.trace(np.square(D))), radar, k, j, i]).reshape(-1,3)
-    return np.sort(pdopList, axis=0)
-
-
 def getTransform(result):
     assert np.shape(result)[0] == 3
     assert np.shape(result)[1] >= 3
@@ -158,13 +106,6 @@ def getTrilateration(*args):
     return positions[:,0] + u1 + v
 
 
-def calibrationPDOP(distance, num_radar):
-    if num_radar < 3:
-        print("Need at least 3 radars")
-    
-    pdopList = getPDOPList(distance)
-    orders = getInsertOrder(pdopList, num_radar)
-
 def calibrationTriangleSize(distance, num_radar):
     if num_radar < 3:
         print("Need at least 3 radars")
@@ -203,10 +144,9 @@ def calibrationTriangleSize(distance, num_radar):
         if not(triangleFound):
             print("Data can't be calibrated")
             break
-    
+    # C library for gradient descent
     grad_lib = ctypes.CDLL("./gradient.so")
-
     grad_lib.gradient.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-    posgrad = np.zeros((3, num_radar), dtype=np.float64)
-    grad_lib.gradient(num_radar, posCalibrated.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), posgrad.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
-    return posgrad
+    result = np.zeros((3, num_radar), dtype=np.float64)
+    grad_lib.gradient(num_radar, posCalibrated.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), result.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+    return result
