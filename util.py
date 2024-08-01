@@ -37,31 +37,6 @@ def getBetter(new1, new2, newIndex, posCalibrated, distance, known):
         return new2
 
 
-def getTransform(result):
-    assert np.shape(result)[0] == 3
-    assert np.shape(result)[1] >= 3
-    transformMatrix = np.zeros((4,4))
-    transformMatrix[4,4] = 1
-
-    translation = np.identity(4)
-    translation[0:3,3] = -result[:,0]
-
-    relative_vec = result - result[:,0]
-    cosTheta1 = relative_vec[0,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
-    sinTheta1 = -relative_vec[1,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
-    cosTheta2 = math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2) / math.sqrt(np.linalg.norm(relative_vec[:,1]))
-    sinTheta2 = relative_vec[2,1]/math.sqrt(np.linalg.norm(relative_vec[:,1]))
-    rotation_t = np.array([[cosTheta2, 0, sinTheta2], [0, 1, 0], [-1*sinTheta2, 0, cosTheta2]]) * np.array([[cosTheta1, -1*sinTheta1, 0], [sinTheta1, cosTheta1, 0], [0, 0, 1]])
-    pos_t = rotation_t*relative_vec[:,2]
-    cosTheta3 = pos_t[1]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
-    sinTheta3 = pos_t[2]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
-
-    rotation = np.array([[1, 0, 0], [0, cosTheta3, -1*sinTheta3], [0, sinTheta3, cosTheta3]]) *rotation_t
-    transformMatrix[1:3,1:3] = rotation
-    transformMatrix = transformMatrix*translation
-    return transformMatrix
-
-
 def getTriangle(dist12:float, dist23:float, dist31:float):
     x2 = dist12; x3 = (x2 ** 2 + dist31**2 - dist23**2)/(2*x2); y3 = math.sqrt(dist31**2 - x3**2)
     return x2, x3, y3
