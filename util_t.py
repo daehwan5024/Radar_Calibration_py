@@ -1,31 +1,6 @@
 from util import *
 
 
-def getTransform(result):
-    assert np.shape(result)[0] == 3
-    assert np.shape(result)[1] >= 3
-    transformMatrix = np.zeros((4,4))
-    transformMatrix[3,3] = 1
-
-    translation = np.identity(4)
-    translation[0:3,3] = -1*result[:,0]
-
-    relative_vec = result - result[:,0] # problem here
-    cosTheta1 = relative_vec[0,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
-    sinTheta1 = -relative_vec[1,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
-    cosTheta2 = math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2) / math.sqrt(np.linalg.norm(relative_vec[:,1]))
-    sinTheta2 = relative_vec[2,1]/math.sqrt(np.linalg.norm(relative_vec[:,1]))
-    rotation_t = np.matmul(np.array([[cosTheta2, 0, sinTheta2], [0, 1, 0], [-1*sinTheta2, 0, cosTheta2]]), np.array([[cosTheta1, -1*sinTheta1, 0], [sinTheta1, cosTheta1, 0], [0, 0, 1]]))
-    pos_t =np.matmul(rotation_t, relative_vec[:,2])
-    cosTheta3 = pos_t[1]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
-    sinTheta3 = pos_t[2]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
-
-    rotation = np.matmul(np.array([[1, 0, 0], [0, cosTheta3, -1*sinTheta3], [0, sinTheta3, cosTheta3]]), rotation_t)
-    transformMatrix[0:3,0:3] = rotation
-    transformMatrix = np.matmul(transformMatrix, translation)
-    return transformMatrix
-
-
 def difference(input1:np.ndarray, input2:np.ndarray):
     if input1.shape != input2.shape:
         print("Input size different")
@@ -57,7 +32,7 @@ def difference(input1:np.ndarray, input2:np.ndarray):
                     d = math.sqrt(np.sum(np.square(trans1_r - trans2)))
                 d = d/input1.shape[1]
                 if d < best[0]:
-                    best =[d, k, j, i]
+                    best =[d, i, j, k]
     return best
 
 
@@ -139,13 +114,13 @@ def radarData2(*args):
     if num_bottom == 1:
         posAbsolute = np.hstack([centerPos, posAbsolute])
     elif num_bottom == 2:
-        posBottom = rotationMatrix * np.array([[-0.5, 0.5], [0, 0], [0, 0]]) + centerPos
+        posBottom = np.matmul(rotationMatrix , np.array([[-0.5, 0.5], [0, 0], [0, 0]])) + centerPos
         posAbsolute = np.hstack([posBottom, posAbsolute])
     elif num_bottom == 3:
-        posBottom = rotationMatrix * np.array([[0, -0.5, 0.5], [math.sqrt(1/3), -1/(2*math.sqrt(3)), -1/(2*math.sqrt(3))], [0,0,0]]) + centerPos
+        posBottom = np.matmul(rotationMatrix, np.array([[0, -0.5, 0.5], [math.sqrt(1/3), -1/(2*math.sqrt(3)), -1/(2*math.sqrt(3))], [0,0,0]])) + centerPos
         posAbsolute = np.hstack([posBottom, posAbsolute])
     elif num_bottom == 4:
-        posBottom = rotationMatrix * [[0.5, 0.5, -0.5, -0.5], [0.5, -0.5, -0.5, 0.5], [0,0,0,0]] + centerPos
+        posBottom = np.matmul(rotationMatrix, [[0.5, 0.5, -0.5, -0.5], [0.5, -0.5, -0.5, 0.5], [0,0,0,0]]) + centerPos
         posAbsolute = np.hstack([posBottom, posAbsolute])
     else:
         print("Too many on the bottom")

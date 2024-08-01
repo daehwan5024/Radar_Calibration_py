@@ -3,12 +3,39 @@ import cmath
 import math
 import ctypes
 
+
+def getTransform(result):
+    assert np.shape(result)[0] == 3
+    assert np.shape(result)[1] >= 3
+    transformMatrix = np.zeros((4,4))
+    transformMatrix[3,3] = 1
+
+    translation = np.identity(4)
+    translation[0:3,3] = -1*result[:,0]
+
+    relative_vec = result - np.array(result[:,0],ndmin=2).T # problem here
+    cosTheta1 = relative_vec[0,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
+    sinTheta1 = -relative_vec[1,1]/math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2)
+    cosTheta2 = math.sqrt(relative_vec[0,1]**2 + relative_vec[1,1]**2) / math.sqrt((relative_vec[0,1]**2 + relative_vec[1,1]**2 + relative_vec[2,1]**2))
+    sinTheta2 = relative_vec[2,1]/math.sqrt((relative_vec[0,1]**2 + relative_vec[1,1]**2 + relative_vec[2,1]**2))
+    rotation_t = np.matmul(np.array([[cosTheta2, 0, sinTheta2], [0, 1, 0], [-1*sinTheta2, 0, cosTheta2]]), np.array([[cosTheta1, -1*sinTheta1, 0], [sinTheta1, cosTheta1, 0], [0, 0, 1]]))
+    pos_t =np.matmul(rotation_t, relative_vec[:,2])
+    cosTheta3 = pos_t[1]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
+    sinTheta3 = -1*pos_t[2]/math.sqrt(pos_t[1]**2 + pos_t[2]**2)
+
+    rotation = np.matmul(np.array([[1, 0, 0], [0, cosTheta3, -1*sinTheta3], [0, sinTheta3, cosTheta3]]), rotation_t)
+    transformMatrix[0:3,0:3] = rotation
+    transformMatrix = np.matmul(transformMatrix, translation)
+    return transformMatrix
+
+
 def pairwiseDist(positions):
     n = np.shape(positions)[1]
     distance = np.zeros((n,n))
     for i in range(n):
         for j in range(n):
-            distance[i, j] = np.linalg.norm(positions[:,i]-positions[:,j])
+            diff = positions[:,i] - positions[:,j]
+            distance[i, j] = math.sqrt(diff[0]**2 + diff[1]**2 + diff[2]**2)
     return distance
 
 
@@ -54,6 +81,7 @@ def getTriangleList(distance):
                     continue
                 triangleList = np.append(triangleList, [area.real, k , j, i]).reshape(-1,4)
     return triangleList[triangleList[:,0].argsort()][::-1]
+
 
 def getTrilateration(*args):
     if len(args) == 2:
