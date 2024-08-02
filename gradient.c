@@ -21,6 +21,8 @@ void gradient(int num_radar, bool *isnan_1D, double *posCalibrated_1D, double *d
             isnan[i][j] = isnan_1D[i*num_radar + j];
         }
     }
+    // Need to verify iteration number and step size
+    // Currently using large iteration number and small step size
     while(grad++<500000){
         memset(loss, 0, 3*num_radar*sizeof(double));
         for(int i=0;i<num_radar;i++) {

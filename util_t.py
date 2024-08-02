@@ -26,13 +26,15 @@ def difference(input1:np.ndarray, input2:np.ndarray):
                 trans2 = trans2[0:3, :]
                 d = 0
                 trans1_r = np.vstack([trans1[0:2,:], -1*trans1[2,:]])
+                should_flip = False
                 if math.sqrt(np.sum(np.square(trans1 - trans2))) < math.sqrt(np.sum(np.square(trans1_r - trans2))):
                     d = math.sqrt(np.sum(np.square(trans1 - trans2)))
                 else:
                     d = math.sqrt(np.sum(np.square(trans1_r - trans2)))
+                    should_flip = True
                 d = d/input1.shape[1]
                 if d < best[0]:
-                    best =[d, i, j, k]
+                    best =[d, i, j, k, should_flip]
     return best
 
 
