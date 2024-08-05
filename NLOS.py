@@ -65,7 +65,7 @@ def noise(real):
 def generate():
     _, _, posAbsolute1, _, _ = radarData2(5, 3, 4)
     _, _, posAbsolute2, _, _ = radarData2(5, 3, 4)
-    pairwiseDist(posAbsolute1)
+
     posAbsolute2[0,:] += 25
     posAbsolute = np.hstack([posAbsolute1, posAbsolute2])
     distAbsolute = pairwiseDist(posAbsolute)

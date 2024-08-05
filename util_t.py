@@ -1,41 +1,28 @@
 from util import *
 
 
-def difference(input1:np.ndarray, input2:np.ndarray):
-    if input1.shape != input2.shape:
-        print("Input size different")
-        return
-    if input1.shape[0] != 3:
-        print("wrong shape")
-        return
-    if np.shape(input1)[1] < 3:
-        print("Need more radar points")
-        return
-    best = [np.inf, np.inf, np.inf, np.inf]
-    for i in range(input1.shape[1]):
-        for j in range(input1.shape[1]):
-            for k in range(input1.shape[1]):
-                if i==j or j==k or k==i:
-                    continue
-                T1 = getTransform(input1[:,[i, j, k]])
-                T2 = getTransform(input2[:,[i, j, k]])
-                trans1 = np.matmul(T1, np.vstack([input1, np.ones((1,input1.shape[1]))]))
-                trans2 = np.matmul(T2, np.vstack([input2, np.ones((1,input2.shape[1]))]))
+def getTransform(input1:np.ndarray, input2:np.ndarray):
+    assert(input1.shape == input2.shape)
+    n = input1.shape[1]
 
-                trans1 = trans1[0:3, :]
-                trans2 = trans2[0:3, :]
-                d = 0
-                trans1_r = np.vstack([trans1[0:2,:], -1*trans1[2,:]])
-                should_flip = False
-                if math.sqrt(np.sum(np.square(trans1 - trans2))) < math.sqrt(np.sum(np.square(trans1_r - trans2))):
-                    d = math.sqrt(np.sum(np.square(trans1 - trans2)))
-                else:
-                    d = math.sqrt(np.sum(np.square(trans1_r - trans2)))
-                    should_flip = True
-                d = d/input1.shape[1]
-                if d < best[0]:
-                    best =[d, i, j, k, should_flip]
-    return best
+    cm1 = np.average(input1, axis=1)
+    cm2 = np.average(input2, axis=1)
+    H = np.zeros((3,3))
+    for i in range(n):
+        H += np.matmul(np.reshape(input1[:,i] - cm1, (3,1)), np.reshape(input2[:,i]-cm2, (1,3)))/n
+    U, S, Vh = np.linalg.svd(H)
+    R = np.matmul(Vh.T, U.T)
+    T = cm2 - np.matmul(R, cm1)
+    return R, T
+
+
+
+def difference(input1:np.ndarray, input2:np.ndarray):
+    if np.any(np.isnan(input1)) or np.any(input1 == np.inf) or np.any(np.isnan(input2)) or np.any(input2 == np.inf):
+        return np.inf
+    R, T = getTransform(input1, input2)
+    input1_t = np.matmul(R, input1) + np.reshape(T, (3, 1))
+    return math.sqrt(np.sum(np.square(input1_t - input2)))/16
 
 
 def addNoise(real):
