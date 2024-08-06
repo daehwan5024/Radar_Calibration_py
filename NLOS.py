@@ -24,23 +24,19 @@ def plot(posAbs, posCal, distance, err, tags, plotDiff=False):
         ax.plot([-10, 10, 10, -10, -10], [-10, -10, 10, 10, -10],[3.5, 3.5,3.5,3.5,3.5], color=[0,0,0])
         ax.plot([15, 35, 35, 15, 15], [-10, -10, 10, 10, -10],[3.5, 3.5, 3.5, 3.5, 3.5], color=[0,0,0])
     
-    def plot_diff(ax, pos1, pos2, err):
-        T1 = getTransform(pos1[:,err[1:4]])
-        T2 = getTransform(pos2[:,err[1:4]])
-        pos1_t = np.matmul( T1, np.vstack([pos1, np.ones((1,pos1.shape[1]))]) )[0:3,:]
-        pos2_t = np.matmul( T2, np.vstack([pos2, np.ones((1,pos2.shape[1]))]) )[0:3,:]
-        if err[4]:
-            pos2_t = np.vstack([pos2_t[0:2,:], -1*pos2_t[2,:]])
+    def plot_diff(ax, pos1, pos2):
+        R, T = getTransform(pos1, pos2)
+        pos1_t = np.matmul(R, pos1) + np.reshape(T, (3,1))
         ax.scatter(pos1_t[0,:], pos1_t[1,:], pos1_t[2,:], marker='.', color='r')
-        ax.scatter(pos2_t[0,:], pos2_t[1,:], pos2_t[2,:], marker='.', color='b')
+        ax.scatter(pos2[0,:], pos2[1,:], pos2[2,:], marker='.', color='b')
         for i in range(pos1.shape[1]):
-            ax.text(pos1_t[0,i], pos1_t[1,i], pos1_t[2,i], '%d'%(i), fontsize=13.5)
+            ax.text(pos2[0,i], pos2[1,i], pos2[2,i], '%d'%(i), fontsize=13.5)
 
     if plotDiff:
         a1 = fig.add_subplot(1,2,1, projection='3d')
         a2 = fig.add_subplot(1,2,2, projection='3d')
         plot_config(a1, posAbs, distance, tags)
-        plot_diff(a2, posAbs, posCal, err)
+        plot_diff(a2, posCal, posAbs)
     else:
         a1 = fig.add_subplot(1,1,1, projection='3d')
         plot_config(a1, posAbs, distance, tags)
@@ -94,7 +90,7 @@ if __name__ == '__main__':
             data = {'posAbsolute':posAbsolute, 'distMeasured':distMeasured, 'posCal':posCal, 'err':err}
             file_name = "Data/"+((time.ctime().replace(":", "_").replace(" ", "_"))+(".mat"))[4:]
             savemat(file_name, data)
+            # plot(posAbsolute, posCal, distMeasured, err, tags, True)
             print()
     except KeyboardInterrupt:
         print()
-        pass

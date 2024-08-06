@@ -22,11 +22,11 @@ def difference(input1:np.ndarray, input2:np.ndarray):
         return np.inf
     R, T = getTransform(input1, input2)
     input1_t = np.matmul(R, input1) + np.reshape(T, (3, 1))
-    return math.sqrt(np.sum(np.square(input1_t - input2)))/16
-
+    diff = np.sqrt(np.sum(np.square(input1_t - input2), axis=0))
+    return np.average(diff)
 
 def addNoise(real):
-    noise = np.zeros(real)
+    noise = np.zeros(real.shape)
     for i in range(noise.shape[0]):
         for j in range(noise.shape[1]):
             noise_t = np.random.normal(0,1/30)

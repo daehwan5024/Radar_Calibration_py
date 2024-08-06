@@ -12,5 +12,4 @@ if __name__ == "__main__":
             data = loadmat(os.path.join(directory_str, filename))
             posAbsolute = data['posAbsolute'];  distMeasured = data['distMeasured']; posCal = data['posCal']
             print(filename)
-            print(difference(posAbsolute, posCal))
-            print(data['err'][0][0])
+            print(data['err'])

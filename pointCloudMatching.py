@@ -17,8 +17,7 @@ def transform(input1:np.ndarray, input2:np.ndarray):
 
     return R, translation
 
-data = loadmat("Data/Aug__2_15_52_02_2024.mat")
-posCal_t = np.vstack([data['posCal'][0:2, :], -1*data['posCal'][2,:]])
+data = loadmat("Data/Aug__5_11_57_26_2024.mat")
 R, T = transform(data['posAbsolute'], data['posCal'])
 
 pos_T = np.matmul(R, data['posAbsolute']) + np.reshape(T, (3,1))
