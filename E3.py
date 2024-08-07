@@ -48,12 +48,14 @@ def rect_line_intersect(rect, line):
             return True
     return False
 
+# Check if two points are in LOS
 def NLOS(shape, point1, point2):
     for rect in shape:
         if rect_line_intersect(rect, [point1, point2]):
             return True
     return False
 
+# return 4 faces of cuboid
 def getPillar(left_bt, width=1, depth=1, height=5):
     p1 = copy.deepcopy(left_bt)
     p2 = copy.deepcopy(p1); p2[0] += width
@@ -68,11 +70,12 @@ def getPillar(left_bt, width=1, depth=1, height=5):
 groundTruth = np.array([[8.9603, 8.9399, 7.922, 3.8117, -2.9476, -8.243, -8.4543], [1.8411, -3.9836, -4.2672, -7.414, -7.4861, -4.157, -0.1732], [4.068, 4.068, 2.282, 2.396, 2.396, 2.282, 1.692]])
 pillar_height_short = 2.5
 
-# left bottom of each cuboid
+# left bottom of each pillar
 pillar1_point = [-3.742, 1.919, 0.001]
 pillar2_point = [3.458, 1.919, 0.001]
 pillar3_point = [3.458, -5.181, 0.001]
 pillar4_point = [-3.742, -5.181, 0.001]
+# lower ceiling near the exit
 ceiling_point =[[[-10, -4, pillar_height_short], [10, -4, pillar_height_short], [10, -8, pillar_height_short], [-10, -8, pillar_height_short]]]
 
 ceiling = Poly3DCollection(ceiling_point, alpha=0.2)
@@ -81,17 +84,15 @@ pillar2 = Poly3DCollection(getPillar(pillar2_point), alpha=0.2)
 pillar3 = Poly3DCollection(getPillar(pillar3_point, height=pillar_height_short), alpha=0.2)
 pillar4 = Poly3DCollection(getPillar(pillar4_point, height=pillar_height_short), alpha=0.2)
 
-# create Triangle at bottom
+# add Triangle at bottom
 centerPos = np.reshape(np.array([0,-3,0]), (3, 1))
 theta = np.random.rand() * 2 * math.pi
 rotationMatrix = np.array([[math.cos(theta), -1*math.sin(theta), 0], [math.sin(theta), math.cos(theta), 0],[0,0,1]])
 posBottom = np.matmul(rotationMatrix, np.array([[0, -0.5, 0.5], [math.sqrt(1/3), -1/(2*math.sqrt(3)), -1/(2*math.sqrt(3))], [0,0,0]])) + centerPos
-
 measure_point = np.hstack([posBottom, groundTruth])
-distAbsolute = pairwiseDist(measure_point)
 
-NLOS(getPillar(pillar3_point), measure_point[:,0], measure_point[:,5])
-NLOS(ceiling_point, measure_point[:,0],measure_point[:,5])
+# Calculate distance and add noise
+distAbsolute = pairwiseDist(measure_point)
 for i in range(distAbsolute.shape[0]):
     for j in range(distAbsolute.shape[1]):
         if i==j:
@@ -100,8 +101,12 @@ for i in range(distAbsolute.shape[0]):
             distAbsolute[i, j] = np.nan
             distAbsolute[j, i] = np.nan
 distMeasured = addNoise2(distAbsolute, 3)
+
+# Calibrate
 pos_Cal = calibrationTriangleSize(distMeasured, distAbsolute.shape[1])
 print(difference(pos_Cal, measure_point))
+
+#plot
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1,projection='3d')
 
@@ -112,6 +117,8 @@ ax.add_collection3d(pillar3)
 ax.add_collection3d(pillar4)
 R, T = getTransform(pos_Cal, measure_point)
 pos_t = np.matmul(R, pos_Cal) + np.reshape(T, (3,1))
+diff_arr = pos_t - measure_point
+print(diff_arr)
 ax.scatter(measure_point[0,:], measure_point[1,:], measure_point[2,:], c='r', marker='.')
 ax.scatter(pos_t[0,:], pos_t[1,:], pos_t[2,:], c='b', marker='.')
 plt.show()
