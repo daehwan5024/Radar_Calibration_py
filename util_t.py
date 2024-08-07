@@ -25,6 +25,7 @@ def difference(input1:np.ndarray, input2:np.ndarray):
     diff = np.sqrt(np.sum(np.square(input1_t - input2), axis=0))
     return np.average(diff)
 
+
 def addNoise(real):
     noise = np.zeros(real.shape)
     for i in range(noise.shape[0]):

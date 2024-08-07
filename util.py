@@ -3,7 +3,8 @@ import cmath
 import math
 import ctypes
 
-
+# Pairwise distance of positions
+# positions are 3xN array, each column is a position
 def pairwiseDist(positions):
     n = np.shape(positions)[1]
     distance = np.zeros((n,n))
@@ -13,7 +14,7 @@ def pairwiseDist(positions):
             distance[i, j] = math.sqrt(diff[0]**2 + diff[1]**2 + diff[2]**2)
     return distance
 
-
+# 
 def getBetter(new1, new2, newIndex, posCalibrated, distance, known):
     known[newIndex] = True
 

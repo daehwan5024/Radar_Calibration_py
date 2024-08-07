@@ -89,7 +89,7 @@ if __name__ == '__main__':
             print(err)
             data = {'posAbsolute':posAbsolute, 'distMeasured':distMeasured, 'posCal':posCal, 'err':err}
             file_name = "Data/"+((time.ctime().replace(":", "_").replace(" ", "_"))+(".mat"))[4:]
-            savemat(file_name, data)
+            # savemat(file_name, data)
             # plot(posAbsolute, posCal, distMeasured, err, tags, True)
             print()
     except KeyboardInterrupt:
