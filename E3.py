@@ -1,10 +1,17 @@
+import math
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
-import copy
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from util_t import *
-
+from simulation import addNoise2
+from evaluation import getTransform, difference
+from calibration import calibrationTriangleSize, pairwiseDist
 np.set_printoptions(linewidth=1000)
+
+# returns whether the line and rectangle intersect
+# rect: 4 points of a rectangle, assumes that rectangle is parallel to xy, yz or zx plane
+# each side of the rectangle should be parallel to x, y or z axis
+# line: two end points of a line segment
 def rect_line_intersect(rect, line):
     a, b, c = line[1][0] - line[0][0], line[1][1] - line[0][1], line[1][2] - line[0][2]
     x, y, z = 0, 0, 0
@@ -49,13 +56,14 @@ def rect_line_intersect(rect, line):
     return False
 
 # Check if two points are in LOS
+# shape should contain list of all rectangles representing blockage
 def NLOS(shape, point1, point2):
     for rect in shape:
         if rect_line_intersect(rect, [point1, point2]):
             return True
     return False
 
-# return 4 faces of cuboid
+# return 4 faces of pilar, each parallel to yz or zx plane
 def getPillar(left_bt, width=1, depth=1, height=5):
     p1 = copy.deepcopy(left_bt)
     p2 = copy.deepcopy(p1); p2[0] += width
@@ -104,12 +112,12 @@ distMeasured = addNoise2(distAbsolute, 3)
 
 # Calibrate
 pos_Cal = calibrationTriangleSize(distMeasured, distAbsolute.shape[1])
-print(difference(pos_Cal, measure_point))
+
 
 #plot
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1,projection='3d')
-
+print(distMeasured)
 ax.add_collection3d(ceiling)
 ax.add_collection3d(pillar1)
 ax.add_collection3d(pillar2)
@@ -117,8 +125,6 @@ ax.add_collection3d(pillar3)
 ax.add_collection3d(pillar4)
 R, T = getTransform(pos_Cal, measure_point)
 pos_t = np.matmul(R, pos_Cal) + np.reshape(T, (3,1))
-diff_arr = pos_t - measure_point
-print(diff_arr)
 ax.scatter(measure_point[0,:], measure_point[1,:], measure_point[2,:], c='r', marker='.')
 ax.scatter(pos_t[0,:], pos_t[1,:], pos_t[2,:], c='b', marker='.')
 plt.show()

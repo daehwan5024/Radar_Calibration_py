@@ -1,9 +1,11 @@
-from util_t import *
+# Simulation for 2 rooms
+
+import numpy as np
+from evaluation import getTransform, difference
+from calibration import pairwiseDist, calibrationTriangleSize
+from simulation import radarData2
 from matplotlib import pyplot as plt
-from scipy.io import savemat
 import time
-
-
 def plot(posAbs, posCal, distance, err, tags, plotDiff=False):
     fig = plt.figure()
     
@@ -43,7 +45,6 @@ def plot(posAbs, posCal, distance, err, tags, plotDiff=False):
     
     plt.show()
 
-
 def noise(real):
     res = np.zeros(real.shape)
     for i in range(real.shape[0]):
@@ -57,7 +58,7 @@ def noise(real):
             res[j, i] = res[i, j]
     return res
 
-
+# generates random data for 2 rooms with size 20x20 seperated by 5m space
 def generate():
     _, _, posAbsolute1, _, _ = radarData2(5, 3, 4)
     _, _, posAbsolute2, _, _ = radarData2(5, 3, 4)
@@ -90,7 +91,7 @@ if __name__ == '__main__':
             data = {'posAbsolute':posAbsolute, 'distMeasured':distMeasured, 'posCal':posCal, 'err':err}
             file_name = "Data/"+((time.ctime().replace(":", "_").replace(" ", "_"))+(".mat"))[4:]
             # savemat(file_name, data)
-            # plot(posAbsolute, posCal, distMeasured, err, tags, True)
+            plot(posAbsolute, posCal, distMeasured, err, tags, True)
             print()
     except KeyboardInterrupt:
         print()

@@ -1,31 +1,12 @@
-from util import *
+import math
 
+import numpy as np
+import matplotlib.pyplot as plt
 
-def getTransform(input1:np.ndarray, input2:np.ndarray):
-    assert(input1.shape == input2.shape)
-    n = input1.shape[1]
+from evaluation import getTransform
+from calibration import pairwiseDist
 
-    cm1 = np.average(input1, axis=1)
-    cm2 = np.average(input2, axis=1)
-    H = np.zeros((3,3))
-    for i in range(n):
-        H += np.matmul(np.reshape(input1[:,i] - cm1, (3,1)), np.reshape(input2[:,i]-cm2, (1,3)))/n
-    U, S, Vh = np.linalg.svd(H)
-    R = np.matmul(Vh.T, U.T)
-    T = cm2 - np.matmul(R, cm1)
-    return R, T
-
-
-
-def difference(input1:np.ndarray, input2:np.ndarray):
-    if np.any(np.isnan(input1)) or np.any(input1 == np.inf) or np.any(np.isnan(input2)) or np.any(input2 == np.inf):
-        return np.inf
-    R, T = getTransform(input1, input2)
-    input1_t = np.matmul(R, input1) + np.reshape(T, (3, 1))
-    diff = np.sqrt(np.sum(np.square(input1_t - input2), axis=0))
-    return np.average(diff)
-
-
+# add random noise based on normal distribution
 def addNoise(real):
     noise = np.zeros(real.shape)
     for i in range(noise.shape[0]):
@@ -36,6 +17,8 @@ def addNoise(real):
     return noise
 
 
+# add noise except to tags
+# tags should be placed first
 def addNoise2(real, num_bottom):
     noise = np.zeros(real.shape)
     for i in range(noise.shape[0]):
@@ -49,7 +32,7 @@ def addNoise2(real, num_bottom):
             noise[j, i] = noise[i, j]
     return noise
 
-
+# generates random radar points
 def radarData():
     num_radar = 8
     posAbsolute = np.random.rand(3, num_radar)
@@ -60,7 +43,8 @@ def radarData():
     distMeasured = addNoise(distAbsolute)
     return num_radar, posAbsolute, distAbsolute, distMeasured
 
-
+# generates random radar points
+# All radars are positioned following the boundary of 20x20 room
 def radarData2(*args):
     num_wall = 4
     num_top = 4
@@ -118,3 +102,7 @@ def radarData2(*args):
     distAbsolute = pairwiseDist(posAbsolute)
     distMeasured = addNoise2(distAbsolute, num_bottom)
     return num_top, num_bottom, posAbsolute, distAbsolute, distMeasured
+
+
+
+

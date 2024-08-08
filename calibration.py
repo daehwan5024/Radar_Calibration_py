@@ -14,7 +14,8 @@ def pairwiseDist(positions):
             distance[i, j] = math.sqrt(diff[0]**2 + diff[1]**2 + diff[2]**2)
     return distance
 
-# 
+# two possiblie points exist for trilateration with 3 points
+# returns the one that better fits the given distance data
 def getBetter(new1, new2, newIndex, posCalibrated, distance, known):
     known[newIndex] = True
 
@@ -39,12 +40,13 @@ def getBetter(new1, new2, newIndex, posCalibrated, distance, known):
     else:
         return new2
 
-
+# returns three points (0,0,0), (x2,0,0), (x3, y3, 0)
+# that has dist12, dist23 dist31 as distance between each point
 def getTriangle(dist12:float, dist23:float, dist31:float):
     x2 = dist12; x3 = (x2 ** 2 + dist31**2 - dist23**2)/(2*x2); y3 = math.sqrt(dist31**2 - x3**2)
     return x2, x3, y3
 
-
+# List of all triangles that are possible from given distance data
 def getTriangleList(distance):
     n = np.shape(distance)[1]
     triangleList = np.array([])
@@ -58,7 +60,11 @@ def getTriangleList(distance):
                 triangleList = np.append(triangleList, [area.real, k , j, i]).reshape(-1,4)
     return triangleList[triangleList[:,0].argsort()][::-1]
 
-
+# return position for trilateration
+# if trilateration is impossible, returns imaginary value
+# may have 2 or 6 input values
+# ([1st point, 2nd point, 3rd point], [1st distance, 2nd distance, 3rd distance]) (2 inputs)
+# (1st point, 2nd point, 3rd point, 1st distance, 2nd distance, 3rd distance)     (6 inputs)
 def getTrilateration(*args):
     if len(args) == 2:
         positions = args[0]; r = args[1]
@@ -84,7 +90,7 @@ def getTrilateration(*args):
     else:
         return 1j
 
-
+# Calibration using triangle size
 def calibrationTriangleSize(distance, num_radar):
     if num_radar < 3:
         print("Need at least 3 radars")
