@@ -44,3 +44,7 @@
 
 simulates blockage by ceiling and pillars\
 Assume that each surface is rectangle with sides parallel to x, y or z axis
+
+## `Calibrate.py`
+
+Simple example of data generation and calibration
