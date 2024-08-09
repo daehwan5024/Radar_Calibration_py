@@ -56,6 +56,7 @@ def rect_line_intersect(rect, line):
     return False
 
 # Check if two points are in LOS
+# return true if blocked, false otherwise
 # shape should contain list of all rectangles representing blockage
 def NLOS(shape, point1, point2):
     for rect in shape:
@@ -86,6 +87,7 @@ pillar4_point = [-3.742, -5.181, 0.001]
 # lower ceiling near the exit
 ceiling_point =[[[-10, -4, pillar_height_short], [10, -4, pillar_height_short], [10, -8, pillar_height_short], [-10, -8, pillar_height_short]]]
 
+# 3D shape for plotting
 ceiling = Poly3DCollection(ceiling_point, alpha=0.2)
 pillar1 = Poly3DCollection(getPillar(pillar1_point), alpha=0.2)
 pillar2 = Poly3DCollection(getPillar(pillar2_point), alpha=0.2)
@@ -93,7 +95,7 @@ pillar3 = Poly3DCollection(getPillar(pillar3_point, height=pillar_height_short),
 pillar4 = Poly3DCollection(getPillar(pillar4_point, height=pillar_height_short), alpha=0.2)
 
 # add Triangle at bottom
-centerPos = np.reshape(np.array([0,-3,0]), (3, 1))
+centerPos = np.reshape(np.array([0,0,0]), (3, 1))
 theta = np.random.rand() * 2 * math.pi
 rotationMatrix = np.array([[math.cos(theta), -1*math.sin(theta), 0], [math.sin(theta), math.cos(theta), 0],[0,0,1]])
 posBottom = np.matmul(rotationMatrix, np.array([[0, -0.5, 0.5], [math.sqrt(1/3), -1/(2*math.sqrt(3)), -1/(2*math.sqrt(3))], [0,0,0]])) + centerPos
@@ -108,11 +110,11 @@ for i in range(distAbsolute.shape[0]):
         if NLOS(getPillar(pillar1_point)+getPillar(pillar2_point)+getPillar(pillar3_point)+getPillar(pillar4_point)+ceiling_point, measure_point[:,i], measure_point[:,j]):
             distAbsolute[i, j] = np.nan
             distAbsolute[j, i] = np.nan
-distMeasured = addNoise2(distAbsolute, 3)
+distMeasured = addNoise2(distAbsolute, 6)
 
 # Calibrate
 pos_Cal = calibrationTriangleSize(distMeasured, distAbsolute.shape[1])
-
+print(difference(pos_Cal, measure_point))
 
 #plot
 fig = plt.figure()

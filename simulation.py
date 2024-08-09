@@ -26,6 +26,8 @@ def addNoise2(real, num_bottom):
             noise_t = 0
             if i<num_bottom and j<num_bottom:
                 noise_t = 0
+            elif i==j:
+                noise_t = 0
             else:
                 noise_t = np.random.normal(0,1/30)
             noise[i, j] = real[i, j] + noise_t

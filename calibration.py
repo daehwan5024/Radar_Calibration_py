@@ -91,6 +91,7 @@ def getTrilateration(*args):
         return 1j
 
 # Calibration using triangle size
+# returns 3XN matrix, each row is a position corresponding to input distance
 def calibrationTriangleSize(distance, num_radar):
     if num_radar < 3:
         print("Need at least 3 radars")
@@ -130,11 +131,11 @@ def calibrationTriangleSize(distance, num_radar):
             print("Data can't be calibrated")
             break
     # C library for gradient descent
+
     nan_arr = np.isnan(distance)
     grad_lib = ctypes.CDLL("./gradient.so")
-    grad_lib.gradient.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_bool), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-    result = np.zeros((3, num_radar), dtype=np.float64)
+    grad_lib.gradient.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_bool), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
 
     grad_lib.gradient(num_radar, nan_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_bool)), posCalibrated.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-                       distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), result.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
-    return result
+                       distance.ctypes.data_as(ctypes.POINTER(ctypes.c_double))) 
+    return posCalibrated

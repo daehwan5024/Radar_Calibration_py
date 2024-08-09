@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-void gradient(int num_radar, bool *isnan_1D, double *posCalibrated_1D, double *distance_1D, double *res) {
+void gradient(int num_radar, bool *isnan_1D, double *posCalibrated_1D, double *distance_1D) {
     int grad = 0;
     double loss[3][num_radar];
     double posCalibrated[3][num_radar];
@@ -49,5 +49,4 @@ void gradient(int num_radar, bool *isnan_1D, double *posCalibrated_1D, double *d
             posCalibrated_1D[i*num_radar+j] = posCalibrated[i][j];
         }
     }
-    memcpy(res, posCalibrated_1D, sizeof(double)*3*num_radar);
 }
