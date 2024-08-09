@@ -20,7 +20,7 @@
 
 ## `evaluation.py` : evaluating calibrated result
 
-`getTransform`: returns Rotation and Translation matrix that best matches `input1` to `input2`
+`getTransform`: returns Rotation and Translation matrix that best matches `input1` to `input2`, [related infromation](https://taeyoung96.github.io/slam/SLAM_03_1/)
 
 `difference`: using `getTransform` return mean difference of each point for the given data
 
