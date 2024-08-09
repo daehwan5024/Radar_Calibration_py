@@ -10,8 +10,8 @@ from calibration import pairwiseDist
 def addNoise(real):
     noise = np.zeros(real.shape)
     for i in range(noise.shape[0]):
-        for j in range(noise.shape[1]):
-            noise_t = np.random.normal(0,1/30)
+        for j in range(i):
+            noise_t = np.random.normal(1,1/30)
             noise[i, j] = real[i, j] + noise_t
             noise[j, i] = noise[i, j]
     return noise
@@ -22,14 +22,14 @@ def addNoise(real):
 def addNoise2(real, num_bottom):
     noise = np.zeros(real.shape)
     for i in range(noise.shape[0]):
-        for j in range(noise.shape[1]):
+        for j in range(i):
             noise_t = 0
             if i<num_bottom and j<num_bottom:
                 noise_t = 0
             elif i==j:
                 noise_t = 0
             else:
-                noise_t = np.random.normal(0,1/30)
+                noise_t = np.random.normal(-0.1,1/30)
             noise[i, j] = real[i, j] + noise_t
             noise[j, i] = noise[i, j]
     return noise
